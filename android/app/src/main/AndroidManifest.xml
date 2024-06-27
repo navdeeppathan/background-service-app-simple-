@@ -1,8 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.timernotificationapp">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <uses-permission android:name="android.permission.VIBRATE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+      <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
@@ -22,16 +22,6 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
-      <!-- receiver -->
-       <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationActions" />
-        <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationBootEventReceiver" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
-            </intent-filter>
-        </receiver>
-        <service android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationListenerService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="true"/>
-        <service android:name="com.ocetnik.timer.BackgroundTimerModule$TimerService" android:enabled="true" android:exported="false"/>
+            <service android:name="com.asterinet.react.bgactions.RNBackgroundActionsTask" android:foregroundServiceType="shortService"/>
     </application>
 </manifest>

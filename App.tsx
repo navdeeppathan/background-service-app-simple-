@@ -1,98 +1,92 @@
-// App.js
-import './PushNotificationConfig';
+import {View, Text, TouchableOpacity} from 'react-native';
+import React from 'react';
+import BackgroundService from 'react-native-background-actions';
+const sleep = (time: number | undefined) =>
+  new Promise(resolve => setTimeout(() => resolve(), time));
 
-import React, {useState, useEffect} from 'react';
-import {View, Text, Button, StyleSheet} from 'react-native';
-import BackgroundTimer from 'react-native-background-timer';
-import PushNotification from 'react-native-push-notification';
+const veryIntensiveTask = async taskDataArguments => {
+  // Example of an infinite loop task
+  const {delay} = taskDataArguments;
+  await new Promise(async resolve => {
+    for (let i = 0; BackgroundService.isRunning(); i++) {
+      console.log(i);
+      await BackgroundService.updateNotification({
+        taskDesc: 'timer application' + i,
+      });
+      await sleep(delay);
+    }
+  });
+};
+
+const options = {
+  taskName: 'Example',
+  taskTitle: 'ExampleTask title',
+  taskDesc: 'ExampleTask description',
+  taskIcon: {
+    name: 'ic_launcher',
+    type: 'mipmap',
+  },
+  color: '#ff00ff',
+  linkingURI: 'yourSchemeHere://chat/jane', // See Deep Linking for more info
+  parameters: {
+    delay: 5000,
+  },
+};
 
 const App = () => {
-  const [seconds, setSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-
-  useEffect(() => {
-    let intervalId: number;
-
-    if (isRunning) {
-      intervalId = BackgroundTimer.setInterval(() => {
-        setSeconds(prevSeconds => prevSeconds + 1);
-        sendNotification(seconds + 1);
-      }, 1000);
-    } else if (!isRunning && seconds !== 0) {
-      BackgroundTimer.clearInterval(intervalId);
-    }
-
-    return () => BackgroundTimer.clearInterval(intervalId);
-  }, [isRunning]);
-
-  const sendNotification = (seconds: number) => {
-    const formattedTime = formatTime(seconds);
-    PushNotification.localNotification({
-      channelId: 'timer-channel',
-      autoCancel: true,
-      bigText: `Timer is running: ${formattedTime}`,
-      subText: 'Click to view the timer',
-      title: 'Timer Notification',
-      message: `Timer is running: ${formattedTime}`,
-      playSound: true,
-      soundName: 'default',
+  const startBackgroundService = async () => {
+    await BackgroundService.start(veryIntensiveTask, options);
+    await BackgroundService.updateNotification({
+      taskDesc: 'timer application',
     });
   };
-
-  const startTimer = () => {
-    setIsRunning(true);
+  const stopBackgroundService = async () => {
+    await BackgroundService.stop();
   };
-
-  const stopTimer = () => {
-    setIsRunning(false);
-    PushNotification.cancelAllLocalNotifications();
-  };
-
-  const resetTimer = () => {
-    setSeconds(0);
-    setIsRunning(false);
-    PushNotification.cancelAllLocalNotifications();
-  };
-
-  const formatTime = (totalSeconds: number) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
-      2,
-      '0',
-    )}:${String(seconds).padStart(2, '0')}`;
-  };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.timerText}>{formatTime(seconds)}</Text>
-      <View style={styles.buttonContainer}>
-        <Button
-          title={isRunning ? 'Pause' : 'Start'}
-          onPress={isRunning ? stopTimer : startTimer}
-        />
-        <Button title="Reset" onPress={resetTimer} />
+    <View
+      style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 20,
+      }}>
+      <Text>App</Text>
+      <View style={{gap: 20}}>
+        <TouchableOpacity
+          onPress={() => {
+            startBackgroundService();
+          }}>
+          <View
+            style={{
+              borderWidth: 1,
+              borderRadius: 40,
+              paddingVertical: 10,
+              paddingHorizontal: 30,
+              backgroundColor: '#000000',
+            }}>
+            <Text style={{color: '#FFFFFF', fontSize: 16}}>start</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            stopBackgroundService();
+          }}>
+          <View
+            style={{
+              borderWidth: 1,
+              borderRadius: 40,
+              paddingVertical: 10,
+              paddingHorizontal: 30,
+              backgroundColor: '#000000',
+            }}>
+            <Text style={{color: '#FFFFFF', fontSize: 16}}>stop</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  timerText: {
-    fontSize: 48,
-    marginBottom: 20,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '60%',
-  },
-});
 
 export default App;
